@@ -1,0 +1,391 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/arm-none-eabi-gcc",
+      "-c",
+      "-g3",
+      "-Og",
+      "-mthumb",
+      "-mcpu=cortex-m3",
+      "-Wall",
+      "--std=c23",
+      "-I.",
+      "-I/home/larry/arm/STM32CubeF1/Drivers/CMSIS/Core/Include",
+      "-I/home/larry/arm/STM32CubeF1/Drivers/CMSIS/Device/ST/STM32F1xx/Include",
+      "-o",
+      "usr/clk.o",
+      "usr/clk.c"
+    ],
+    "directory": "/home/larry/arm/iii",
+    "file": "/home/larry/arm/iii/usr/clk.c",
+    "output": "/home/larry/arm/iii/usr/clk.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/arm-none-eabi-gcc",
+      "-c",
+      "-g3",
+      "-Og",
+      "-mthumb",
+      "-mcpu=cortex-m3",
+      "-Wall",
+      "--std=c23",
+      "-I.",
+      "-I/home/larry/arm/STM32CubeF1/Drivers/CMSIS/Core/Include",
+      "-I/home/larry/arm/STM32CubeF1/Drivers/CMSIS/Device/ST/STM32F1xx/Include",
+      "-o",
+      "usr/delay.o",
+      "usr/delay.c"
+    ],
+    "directory": "/home/larry/arm/iii",
+    "file": "/home/larry/arm/iii/usr/delay.c",
+    "output": "/home/larry/arm/iii/usr/delay.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/arm-none-eabi-gcc",
+      "-c",
+      "-g3",
+      "-Og",
+      "-mthumb",
+      "-mcpu=cortex-m3",
+      "-Wall",
+      "--std=c23",
+      "-I.",
+      "-I/home/larry/arm/STM32CubeF1/Drivers/CMSIS/Core/Include",
+      "-I/home/larry/arm/STM32CubeF1/Drivers/CMSIS/Device/ST/STM32F1xx/Include",
+      "-o",
+      "usr/exti.o",
+      "usr/exti.c"
+    ],
+    "directory": "/home/larry/arm/iii",
+    "file": "/home/larry/arm/iii/usr/exti.c",
+    "output": "/home/larry/arm/iii/usr/exti.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/arm-none-eabi-gcc",
+      "-c",
+      "-g3",
+      "-Og",
+      "-mthumb",
+      "-mcpu=cortex-m3",
+      "-Wall",
+      "--std=c23",
+      "-I.",
+      "-I/home/larry/arm/STM32CubeF1/Drivers/CMSIS/Core/Include",
+      "-I/home/larry/arm/STM32CubeF1/Drivers/CMSIS/Device/ST/STM32F1xx/Include",
+      "-o",
+      "usr/init.o",
+      "usr/init.c"
+    ],
+    "directory": "/home/larry/arm/iii",
+    "file": "/home/larry/arm/iii/usr/init.c",
+    "output": "/home/larry/arm/iii/usr/init.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/arm-none-eabi-gcc",
+      "-c",
+      "-g3",
+      "-Og",
+      "-mthumb",
+      "-mcpu=cortex-m3",
+      "-Wall",
+      "--std=c23",
+      "-I.",
+      "-I/home/larry/arm/STM32CubeF1/Drivers/CMSIS/Core/Include",
+      "-I/home/larry/arm/STM32CubeF1/Drivers/CMSIS/Device/ST/STM32F1xx/Include",
+      "-o",
+      "usr/io.o",
+      "usr/io.c"
+    ],
+    "directory": "/home/larry/arm/iii",
+    "file": "/home/larry/arm/iii/usr/io.c",
+    "output": "/home/larry/arm/iii/usr/io.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/arm-none-eabi-gcc",
+      "-c",
+      "-g3",
+      "-Og",
+      "-mthumb",
+      "-mcpu=cortex-m3",
+      "-Wall",
+      "--std=c23",
+      "-I.",
+      "-I/home/larry/arm/STM32CubeF1/Drivers/CMSIS/Core/Include",
+      "-I/home/larry/arm/STM32CubeF1/Drivers/CMSIS/Device/ST/STM32F1xx/Include",
+      "-o",
+      "usr/led.o",
+      "usr/led.c"
+    ],
+    "directory": "/home/larry/arm/iii",
+    "file": "/home/larry/arm/iii/usr/led.c",
+    "output": "/home/larry/arm/iii/usr/led.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/arm-none-eabi-gcc",
+      "-c",
+      "-g3",
+      "-Og",
+      "-mthumb",
+      "-mcpu=cortex-m3",
+      "-Wall",
+      "--std=c23",
+      "-I.",
+      "-I/home/larry/arm/STM32CubeF1/Drivers/CMSIS/Core/Include",
+      "-I/home/larry/arm/STM32CubeF1/Drivers/CMSIS/Device/ST/STM32F1xx/Include",
+      "-o",
+      "usr/nvic.o",
+      "usr/nvic.c"
+    ],
+    "directory": "/home/larry/arm/iii",
+    "file": "/home/larry/arm/iii/usr/nvic.c",
+    "output": "/home/larry/arm/iii/usr/nvic.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/arm-none-eabi-gcc",
+      "-c",
+      "-g3",
+      "-Og",
+      "-mthumb",
+      "-mcpu=cortex-m3",
+      "-Wall",
+      "--std=c23",
+      "-I.",
+      "-I/home/larry/arm/STM32CubeF1/Drivers/CMSIS/Core/Include",
+      "-I/home/larry/arm/STM32CubeF1/Drivers/CMSIS/Device/ST/STM32F1xx/Include",
+      "-o",
+      "usr/shell.o",
+      "usr/shell.c"
+    ],
+    "directory": "/home/larry/arm/iii",
+    "file": "/home/larry/arm/iii/usr/shell.c",
+    "output": "/home/larry/arm/iii/usr/shell.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/arm-none-eabi-gcc",
+      "-c",
+      "-g3",
+      "-Og",
+      "-mthumb",
+      "-mcpu=cortex-m3",
+      "-Wall",
+      "--std=c23",
+      "-I.",
+      "-I/home/larry/arm/STM32CubeF1/Drivers/CMSIS/Core/Include",
+      "-I/home/larry/arm/STM32CubeF1/Drivers/CMSIS/Device/ST/STM32F1xx/Include",
+      "-o",
+      "usr/syscall.o",
+      "usr/syscall.c"
+    ],
+    "directory": "/home/larry/arm/iii",
+    "file": "/home/larry/arm/iii/usr/syscall.c",
+    "output": "/home/larry/arm/iii/usr/syscall.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/arm-none-eabi-gcc",
+      "-c",
+      "-g3",
+      "-Og",
+      "-mthumb",
+      "-mcpu=cortex-m3",
+      "-Wall",
+      "--std=c23",
+      "-I.",
+      "-I/home/larry/arm/STM32CubeF1/Drivers/CMSIS/Core/Include",
+      "-I/home/larry/arm/STM32CubeF1/Drivers/CMSIS/Device/ST/STM32F1xx/Include",
+      "-o",
+      "usr/systick.o",
+      "usr/systick.c"
+    ],
+    "directory": "/home/larry/arm/iii",
+    "file": "/home/larry/arm/iii/usr/systick.c",
+    "output": "/home/larry/arm/iii/usr/systick.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/arm-none-eabi-gcc",
+      "-c",
+      "-g3",
+      "-Og",
+      "-mthumb",
+      "-mcpu=cortex-m3",
+      "-Wall",
+      "--std=c23",
+      "-I.",
+      "-I/home/larry/arm/STM32CubeF1/Drivers/CMSIS/Core/Include",
+      "-I/home/larry/arm/STM32CubeF1/Drivers/CMSIS/Device/ST/STM32F1xx/Include",
+      "-o",
+      "usr/test.o",
+      "usr/test.c"
+    ],
+    "directory": "/home/larry/arm/iii",
+    "file": "/home/larry/arm/iii/usr/test.c",
+    "output": "/home/larry/arm/iii/usr/test.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/arm-none-eabi-gcc",
+      "-c",
+      "-g3",
+      "-Og",
+      "-mthumb",
+      "-mcpu=cortex-m3",
+      "-Wall",
+      "--std=c23",
+      "-I.",
+      "-I/home/larry/arm/STM32CubeF1/Drivers/CMSIS/Core/Include",
+      "-I/home/larry/arm/STM32CubeF1/Drivers/CMSIS/Device/ST/STM32F1xx/Include",
+      "-o",
+      "usr/usart.o",
+      "usr/usart.c"
+    ],
+    "directory": "/home/larry/arm/iii",
+    "file": "/home/larry/arm/iii/usr/usart.c",
+    "output": "/home/larry/arm/iii/usr/usart.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/arm-none-eabi-gcc",
+      "-c",
+      "-g3",
+      "-Og",
+      "-mthumb",
+      "-mcpu=cortex-m3",
+      "-Wall",
+      "--std=c23",
+      "-I.",
+      "-I/home/larry/arm/STM32CubeF1/Drivers/CMSIS/Core/Include",
+      "-I/home/larry/arm/STM32CubeF1/Drivers/CMSIS/Device/ST/STM32F1xx/Include",
+      "-o",
+      "knl/schel.o",
+      "knl/schel.c"
+    ],
+    "directory": "/home/larry/arm/iii",
+    "file": "/home/larry/arm/iii/knl/schel.c",
+    "output": "/home/larry/arm/iii/knl/schel.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/arm-none-eabi-gcc",
+      "-c",
+      "-g3",
+      "-Og",
+      "-mthumb",
+      "-mcpu=cortex-m3",
+      "-Wall",
+      "--std=c23",
+      "-I.",
+      "-I/home/larry/arm/STM32CubeF1/Drivers/CMSIS/Core/Include",
+      "-I/home/larry/arm/STM32CubeF1/Drivers/CMSIS/Device/ST/STM32F1xx/Include",
+      "-o",
+      "knl/stm32f1xx_it.o",
+      "knl/stm32f1xx_it.c"
+    ],
+    "directory": "/home/larry/arm/iii",
+    "file": "/home/larry/arm/iii/knl/stm32f1xx_it.c",
+    "output": "/home/larry/arm/iii/knl/stm32f1xx_it.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/arm-none-eabi-gcc",
+      "-c",
+      "-g3",
+      "-Og",
+      "-mthumb",
+      "-mcpu=cortex-m3",
+      "-Wall",
+      "--std=c23",
+      "-I.",
+      "-I/home/larry/arm/STM32CubeF1/Drivers/CMSIS/Core/Include",
+      "-I/home/larry/arm/STM32CubeF1/Drivers/CMSIS/Device/ST/STM32F1xx/Include",
+      "-o",
+      "knl/syshdlr.o",
+      "knl/syshdlr.c"
+    ],
+    "directory": "/home/larry/arm/iii",
+    "file": "/home/larry/arm/iii/knl/syshdlr.c",
+    "output": "/home/larry/arm/iii/knl/syshdlr.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/arm-none-eabi-gcc",
+      "-c",
+      "-g3",
+      "-Og",
+      "-mthumb",
+      "-mcpu=cortex-m3",
+      "-Wall",
+      "--std=c23",
+      "-I.",
+      "-I/home/larry/arm/STM32CubeF1/Drivers/CMSIS/Core/Include",
+      "-I/home/larry/arm/STM32CubeF1/Drivers/CMSIS/Device/ST/STM32F1xx/Include",
+      "-o",
+      "knl/system_stm32f1xx.o",
+      "knl/system_stm32f1xx.c"
+    ],
+    "directory": "/home/larry/arm/iii",
+    "file": "/home/larry/arm/iii/knl/system_stm32f1xx.c",
+    "output": "/home/larry/arm/iii/knl/system_stm32f1xx.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/arm-none-eabi-gcc",
+      "-c",
+      "-g3",
+      "-Og",
+      "-mthumb",
+      "-mcpu=cortex-m3",
+      "-Wall",
+      "--std=c23",
+      "-I.",
+      "-I/home/larry/arm/STM32CubeF1/Drivers/CMSIS/Core/Include",
+      "-I/home/larry/arm/STM32CubeF1/Drivers/CMSIS/Device/ST/STM32F1xx/Include",
+      "-o",
+      "knl/thrd.o",
+      "knl/thrd.c"
+    ],
+    "directory": "/home/larry/arm/iii",
+    "file": "/home/larry/arm/iii/knl/thrd.c",
+    "output": "/home/larry/arm/iii/knl/thrd.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/arm-none-eabi-gcc",
+      "-c",
+      "-g3",
+      "-mthumb",
+      "-mcpu=cortex-m3",
+      "-Wa,--warn",
+      "-o",
+      "knl/executor.o",
+      "knl/executor.S"
+    ],
+    "directory": "/home/larry/arm/iii",
+    "file": "/home/larry/arm/iii/knl/executor.S",
+    "output": "/home/larry/arm/iii/knl/executor.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/arm-none-eabi-gcc",
+      "-c",
+      "-g3",
+      "-mthumb",
+      "-mcpu=cortex-m3",
+      "-Wa,--warn",
+      "-o",
+      "startup.o",
+      "startup.s"
+    ],
+    "directory": "/home/larry/arm/iii",
+    "file": "/home/larry/arm/iii/startup.s",
+    "output": "/home/larry/arm/iii/startup.o"
+  }
+]

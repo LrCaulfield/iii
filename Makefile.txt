@@ -1,0 +1,80 @@
+TARGET := main
+
+LIB := /home/larry/arm/STM32CubeF1
+CMSIS := $(LIB)/Drivers/CMSIS
+CMSIS_CORE := $(CMSIS)/Core
+CMSIS_DEV := $(CMSIS)/Device/ST/STM32F1xx
+
+LINK := STM32F103X6_FLASH.ld
+START := startup_stm32f103x6.s
+FLASH_ADDR := 0x08000000
+INTERFACE_CFG := interface/stlink.cfg
+TARGET_CFG := target/stm32f1x.cfg
+
+STARTUP := startup.s
+
+USR_SRC := $(wildcard usr/*.c usr/*.s usr/*.S)
+KNL_SRC := $(wildcard knl/*.c knl/*.s knl/*.S)
+
+USR_OBJ := $(patsubst %.c %.s %.S,%.o,$(USR_SRC))
+KNL_OBJ := $(patsubst %.c %.s %.S,%.o,$(KNL_SRC))
+OBJ := $(USR_OBJ) $(KNL_OBJ) $(STARTUP:.s=.o)
+
+CC := arm-none-eabi-gcc
+CC_FLAGS := -c -g3 -Og -mthumb -mcpu=cortex-m3 -Wall \
+		   --std=c23 \
+		   -I. -I$(CMSIS_CORE)/Include \
+		   -I$(CMSIS_DEV)/Include
+
+AS := arm-none-eabi-gcc
+AS_FLAGS := -c -g3 -mthumb -mcpu=cortex-m3 -Wa,--warn
+
+LD := arm-none-eabi-gcc
+LD_FLAGS := -g3 -mthumb -mcpu=cortex-m3 \
+		   -T $(LINK) \
+		   -specs:=nano.specs \
+		   -nostartfiles -ffreestanding
+
+OBJCOPY := arm-none-eabi-objcopy
+OBJCOPY_FLAGS := -O binary
+
+OBJDUMP := arm-none-eabi-objdump
+OBJDUMP_FLAGS := -S
+
+$(TARGET).bin: $(TARGET).elf
+	$(OBJCOPY) $(OBJCOPY_FLAGS) $< $@
+	$(OBJDUMP) $(OBJDUMP_FLAGS) $< > $(TARGET).asm
+
+$(TARGET).elf: $(OBJ) $(LINK)
+	$(LD) $(LD_FLAGS) -o $@ $(OBJ)
+
+%.o: %.c
+	$(CC) $(CC_FLAGS) -o $@ $<
+
+%.o: %.s
+	$(AS) $(AS_FLAGS) -o $@ $<
+
+%.o: %.S
+	$(AS) $(AS_FLAGS) -o $@ $<
+
+flash: $(TARGET).bin
+	openocd -f $(INTERFACE_CFG) -f $(TARGET_CFG) \
+		-c init \
+		-c halt \
+		-c "flash write_image erase $(TARGET).bin $(FLASH_ADDR)" \
+		-c reset \
+		-c shutdown
+
+debug:
+	openocd -f $(INTERFACE_CFG) -f $(TARGET_CFG)
+
+clean:
+	rm -f $(TARGET).elf $(TARGET).bin $(USR_OBJ) $(KNL_OBJ)
+
+Clean: clean
+	rm -f $(STARTUP:.s=.o)
+
+rebuild: Clean flash
+
+echo:
+	@echo $(KNL_OBJ)
