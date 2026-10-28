@@ -1,5 +1,7 @@
 #pragma once
 
+#define SIG_N 9
+
 enum SysNum {
     SYS_YIELD,
     SYS_NEW,
@@ -10,6 +12,7 @@ enum SysNum {
 } ;
 
 enum Sig {
+    SIG_NO = 0,
     SIG_KILL,
 };
 

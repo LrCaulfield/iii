@@ -2,49 +2,34 @@
 #include <string.h>
 #include <stdio.h>
 #include "thrd.h"
-#include "usr/init.h"
+#include "list.h"
 
-uint8_t pri_run;
-struct Thrd *thrd_run[PRI_N];
-struct Thrd *thrd_heads[PRI_N];
+struct Thrd *thrd_run;
+struct Node thrd_heads[PRI_N];
 
 static pid_t pidalloc(void)
 {
     for (pid_t pid = 1; pid < MAX_THRD_N; pid++) {
-        for (uint8_t i = 0; i < PRI_N; i++) {
-            for (
-                struct Thrd *thrd = thrd_heads[i]->next;
-                thrd != thrd_heads[i];
-                thrd = thrd->next
-            ) if (thrd->pid == pid) goto inc_pid;
-        }
+        if (thrdSrch(pid)) continue;
         return pid;
-inc_pid:
     }
     return 0;
 }
 
-struct Thrd
-*creatThrd(void *func, char **argv, uint8_t pri)
+struct Thrd *thrdCreat(void *func, char **argv, uint8_t pri)
 {
-    #define THREAD_STACK_SIZE 0x200
-
     pid_t pid = pidalloc();
     if (pid == 0) return NULL;
 
-    struct Thrd *thrd = malloc(sizeof(struct Thrd));
+    struct Thrd *thrd = nodeCreat(sizeof(struct Thrd));
     if (thrd == NULL) { return NULL; }
 
-    thrd->prev = thrd_heads[pri];
-    thrd->next = thrd_heads[pri]->next;
-    thrd_heads[pri]->next = thrd;
-
-    if ((thrd->ptr = malloc(THREAD_STACK_SIZE)) == NULL) {
+    if ((thrd->ptr = malloc(THRD_STACK_SIZE)) == NULL) {
         free((void *)thrd);
         return NULL;
     }
 
-    thrd->psp = thrd->ptr + THREAD_STACK_SIZE - 16 * 4;
+    thrd->psp = thrd->ptr + THRD_STACK_SIZE - 16 * 4;
     
     for (thrd->argc = 0; argv[thrd->argc] != NULL; thrd->argc++);
     thrd->argv = thrd->ptr;
@@ -55,11 +40,6 @@ struct Thrd
         ptr += strlen(argv[i]) + 1;
     }
 
-    thrd->pid = pid;
-    thrd->stat = RUN;
-    thrd->dywd = NULL;
-    thrd->is_homicide = false;
-
     struct Frm *frm = thrd->psp;
     frm->r0 = thrd->argc;
     frm->r1 = (uint32_t)thrd->argv;
@@ -67,49 +47,56 @@ struct Thrd
     frm->pc = func;
     frm->psr = 0x01000000;
 
+    listIns((struct Node *)thrd, &thrd_heads[pri]);
+
+    thrd->pid = pid;
+    thrd->stat = RUN;
+    memset(thrd->dywd, 0, sizeof(thrd->dywd));
+    thrd->sig = SIG_NO;
+
     return thrd;
 }
 
-void delThrd(struct Thrd *thrd)
+void thrdDel(struct Thrd *thrd)
 {
-    thrd->next->prev = thrd->prev;
-    thrd->prev->next = thrd->next;
+    listRm(thrd);
     free(thrd->ptr);
-    free((void *)thrd);
+    free(thrd);
 }
 
-struct Thrd *findThrd(pid_t pid)
+struct Thrd *thrdSrch(pid_t pid)
 {
     for (uint8_t pri = 0; pri < PRI_N; pri++) {
-        for (
-            struct Thrd *thrd = thrd_heads[pri]->next;
-            thrd != thrd_heads[pri]; thrd = thrd->next
-        ) if (thrd->pid == pid) return thrd;
+        for (struct Thrd *thrd = (struct Thrd *)thrd_heads[pri].next;
+             thrd != (struct Thrd *)&thrd_heads[pri];
+             thrd = thrd->next)
+            if (thrd->pid == pid) return thrd;
     }
     return NULL;
 }
 
-struct Thrd *swtThrd(struct Thrd *thrd, uint8_t pri)
+struct Thrd *thrdSwt(struct Thrd *thrd)
 {
-    thrd = thrd->next;
-    if (thrd->pid == 0) thrd = thrd->next;
-    return thrd;
+    for (uint8_t pri = 0; pri < PRI_N; pri++)
+        if (thrd->next == (struct Thrd *)&thrd_heads[pri])
+            return (struct Thrd *)thrd_heads[pri].next;
+    return thrd->next;
 }
 
 void printStat(struct Thrd *thrd)
 {
     switch (thrd->stat) {
     case RUN:
-        printf(" RUN");
+        printf("RUN");
         break;
-    case PEND:
-        printf(" PEND");
+    case BLK:
+        printf("BLK");
         break;
-    case ZOMBIE:
-        printf(" ZOMBIE");
+    case ZMB:
+        printf("ZMB");
         break;
     case DIE:
-        printf(" DIE");
+        printf("DIE");
         break;
     }
 }

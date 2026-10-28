@@ -10,19 +10,18 @@ extern char _end;
 static uint32_t
 syscall(uint32_t sys_num, uint32_t arg0, uint32_t arg1, uint32_t arg2)
 {
-    register uint32_t r7 __asm__("r7") = sys_num;
-    register uint32_t r0 __asm__("r0") = arg0;
-    register uint32_t r1 __asm__("r1") = arg1;
-    register uint32_t r2 __asm__("r2") = arg2;
-
+    register uint32_t sys_numR __asm__("r7") = sys_num;
+    register uint32_t arg0R __asm__("r0") = arg0;
+    register uint32_t arg1R __asm__("r1") = arg1;
+    register uint32_t arg2R __asm__("r2") = arg2;
+    register uint32_t ret __asm__("r0");
     __asm__ volatile (
-        "    svc #0     \n"
-        : "+r"(r0)
-        : "r"(r7), "r"(r1), "r"(r2)
+        "svc #0 \n"
+        : "=r"(ret)
+        : "r"(sys_numR), "r"(arg0R), "r"(arg1R), "r"(arg2R)
         : "memory"
     );
-
-    return r0;
+    return ret;
 }
 
 ssize_t iiiRead(int fd, char *buf, size_t len)
@@ -59,7 +58,7 @@ void iiiYield(void)
     syscall(SYS_YIELD, 0, 0, 0);
 }
 
-pid_t iiiNew(void *func, char **argv)
+pid_t iiiNew(void *func, char **argv, uint8_t pri)
 {
     return syscall(SYS_NEW, (uint32_t)func, (uint32_t)argv, 0);
 }
@@ -79,9 +78,9 @@ int iiiKill(pid_t pid, enum Sig sig)
     return syscall(SYS_KILL, pid, sig, 0);
 }
 
-void iiiDywd(void (*func)(void))
+void iiiDywd(enum Sig sig, void (*func)(void))
 {
-    syscall(SYS_DYWD, (uint32_t)func, 0, 0);
+    syscall(SYS_DYWD, sig, (uint32_t)func, 0);
 }
 
 /* ! */

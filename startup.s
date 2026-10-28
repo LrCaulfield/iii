@@ -36,12 +36,12 @@ clear_bss_loop:
 clear_bss_done:
     
     bl SystemInit
-
-    mov r0, #0b10
-    msr control, r0
+    bl iiiInit
 
     mrs r0, msp
     msr psp, r0
+    mov r0, #0b10
+    msr control, r0
 
     /* set SysTick_CTRL_TICKINT */
     ldr r0, =0xe000e010 // SysTick_CTRL
@@ -56,25 +56,25 @@ infinit_loop:
 
 .type PendSV_Handler, %function
 PendSV_Handler:
-    push {lr}
-    mrs r0, psp
-    stmdb r0!, {r4-r11}
-    bl schel
-    ldmia r0!, {r4-r11}
-    msr psp, r0
-    pop {pc}
+    ldr r1, =schel
+    b trapper
 .size PendSV_Handler, . - PendSV_Handler
 
 .type SVC_Handler, %function
 SVC_Handler:
+    ldr r1, = distr
+    b trapper
+.size SVC_Handler, . - SVC_Handler
+
+trapper:
     push {lr}
     mrs r0, psp
     stmdb r0!, {r4-r11}
-    bl distr
+    blx r1
     ldmia r0!, {r4-r11}
     msr psp, r0
     pop {pc}
-.size SVC_Handler, . - SVC_Handler
+.size trapper, . - trapper
 
 
 .type Default_Handler, %function

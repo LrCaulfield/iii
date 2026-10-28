@@ -7,6 +7,15 @@
 *.map
 *.lst
 *.su
+*.swp
+*~
+.DS_Store
+
+knl/
+*.o
+
+usr/
+*.o
 
 log/
 *.log
@@ -14,7 +23,3 @@ log/
 tool/debug
 tool/telnet
 tool/tty
-
-*.swp
-*~
-.DS_Store

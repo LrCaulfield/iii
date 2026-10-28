@@ -52,7 +52,7 @@ void shell(int argc, char **argv)
 
         for (int i = 0; i < CMD_N; i++) {
             if (!strcmp(tokens[0], cmds[i].cmd)) {
-                pid_t pid = iiiNew(cmds[i].func, tokens);
+                pid_t pid = iiiNew(cmds[i].func, tokens, 0);
                 if (w) iiiWait(pid, NULL);
                 goto ctn;
             }
@@ -113,8 +113,8 @@ void cmdPs(int argc, char **argv)
         uint32_t basepri = __get_BASEPRI();
         __set_BASEPRI(1);
         for (
-            struct Thrd *thrd = thrd_heads[i]->next;
-            thrd != thrd_heads[i];
+            struct Thrd *thrd = (struct Thrd *)thrd_heads[i].next;
+            thrd != (struct Thrd *)&thrd_heads[i];
             thrd = thrd->next
         ) {
             printf("%d", thrd->pid);

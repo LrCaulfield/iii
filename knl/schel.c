@@ -1,53 +1,68 @@
 #include <stdint.h>
 #include <malloc.h>
+#include <string.h>
 #include <sys/types.h>
 #include "cmsis_gcc.h"
 #include "system_stm32f1xx.h"
+#include "list.h"
 #include "thrd.h"
 #include "schel.h"
 #include "syshdlr.h"
-#include "usr/init.h"
+#include "usr/shell.h"
+#include "usr/test.h"
 
-void shell(int argc, char **argv);
-void test(int argc, char **argv);
+extern char _estack;
+
+void executor(void);
+
 
 void *schel(void *psp)
 {
-    static bool boot;
-    if (!boot) {
-        boot = true;
+    static bool booted;
+    if (!booted) {
+        booted = true;
         __set_CONTROL(0b11);
-
-        for (uint8_t i = 0; i < PRI_N; i++) {
-            thrd_heads[i] = malloc(sizeof(struct Thrd));
-            thrd_heads[i]->next = thrd_heads[i];
-            thrd_heads[i]->pid = 0;
-        }
-        char *argv[2] = { "shell" };
-        thrd_run[0] = creatThrd((void *)shell, argv, 0);
-        thrd_run[0]->stat = RUN;
-        return thrd_run[0]->psp;
+        return  thrd_run->psp;
     }
 
-    thrd_run[pri_run]->psp = psp;
+    thrd_run->psp = psp;
+    listExch((struct Node *)thrd_run->prev);
 
     for (uint8_t pri = 0; pri < PRI_N; pri++) {
-        if (thrd_run[pri] == NULL) continue;
-        struct Thrd *thrd = thrd_run[pri]->next;
+        if (thrd_heads[pri].next == &thrd_heads[pri]) continue;
+
+        struct Thrd *thrd = (struct Thrd *)&thrd_heads[pri];
         do {
-            if (thrd->pid == 0) thrd = thrd->next;
-            if (thrd->stat == RUN || thrd->is_homicide) {
-                thrd->is_homicide = false;
-                thrd_run[pri] = thrd;
-                return thrd_run[pri]->psp;
-            } else if (thrd->stat == DIE) {
-                struct Thrd *thrd_kill = thrd;
-                thrd = thrd->next;
-                delThrd(thrd_kill);
-                continue;
-            }
             thrd = thrd->next;
-        } while (thrd != thrd_run[pri]->next);
+            if (thrd->sig) goto run;
+            switch (thrd->stat) {
+            case (DIE):
+                thrdDel(thrd);
+                continue;
+            case (RUN):
+run:
+                thrd_run = thrd;
+                return thrd_run->psp;
+                break;
+            default:
+            }
+        } while (thrd != (struct Thrd *)&thrd_heads[pri]);
     }
     for (;;);
+}
+
+void *iiiInit()
+{
+    for (uint8_t pri = 0; pri < PRI_N; pri++) {
+        thrd_heads[pri].prev = &thrd_heads[pri];
+        thrd_heads[pri].next = &thrd_heads[pri];
+    }
+    char *argv[2] = { "shell", NULL, };
+    thrd_run = thrdCreat(shell, argv, 0);
+    thrd_run->pare = NULL;
+    thrd_run->chil = NULL;
+    thrd_run->sibl = NULL;
+
+    thrd_run->stat = RUN;
+    return thrd_run->psp;
 }

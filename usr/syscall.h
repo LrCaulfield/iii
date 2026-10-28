@@ -7,11 +7,11 @@
 ssize_t iiiRead(int fd, char *ptr, size_t len);
 ssize_t iiiWrite(int fd, char *ptr, size_t len);
 void iiiYield(void);
-pid_t iiiNew(void *func, char **argv);
+pid_t iiiNew(void *func, char **argv, uint8_t pri);
 pid_t iiiWait(pid_t pid, int *_Nullable wstat);
 void iiiExit(int stat);
 int iiiKill(pid_t pid, enum Sig sig);
-void iiiDywd(void (*func)(void));
+void iiiDywd(enum Sig sig, void (*func)(void));
 void *mallocSv(size_t size);
 
 caddr_t _sbrk(int incr);

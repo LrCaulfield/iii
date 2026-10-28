@@ -1,40 +1,33 @@
 #pragma once
 #include <sys/types.h>
-#include "signal.h"
+#include "syshdlr.h"
+#include "list.h"
 
 #define MAX_THRD_N 10
-#define PRI_N 1
+#define PRI_N 2
+#define THRD_STACK_SIZE 0x200
 
-enum Stat {
-    RUN,
-    PEND,
-    ZOMBIE,
-    DIE,
-};
-
-struct Wait {
-    pid_t pid;
-    int *wstat;
-};
-
-struct Rsn {
-    union { struct Wait wait; int io; } val;
-    enum { WAIT, IO, } type;
-};
+enum Stat { RUN, BLK, ZMB, DIE, };
 
 struct Thrd {
-    struct Rsn rsn;
-    pid_t pid;  // offset == 12
+    struct Thrd *prev;
+    struct Thrd *next;
+
+    pid_t pid;
     void *psp;
     void *ptr;
     int argc;
     char **argv;
-    enum Stat stat;
     int *wstat;
-    void (*dywd)(void); // offset == 40
-    bool is_homicide;
-    struct Thrd *prev;
-    struct Thrd *next;
+    void (*dywd[10])(void);
+
+    struct Thrd *pare;
+    struct Thrd *chil;
+    struct Thrd *sibl;
+
+    pid_t wpid;
+    enum Stat stat;
+    enum Sig sig;
 };
 
 struct Frm {
@@ -46,12 +39,11 @@ struct Frm {
     uint32_t psr;
 };
 
-extern uint8_t pri_run;
-extern struct Thrd *thrd_run[];
-extern struct Thrd *thrd_heads[];
+extern struct Thrd *thrd_run;
+extern struct Node thrd_heads[PRI_N];
 
-struct Thrd *creatThrd(void *func, char **argv, uint8_t pri);
-void delThrd(struct Thrd *thrd);
-void rotatThrdList(uint8_t pri);
-struct Thrd *findThrd(pid_t pid);
+struct Thrd *thrdCreat(void *func, char **argv, uint8_t pri);
+void thrdDel(struct Thrd *thrd);
+struct Thrd *thrdSrch(pid_t pid);
+struct Thrd *thrdSwt(struct Thrd *thrd);
 void printStat(struct Thrd *thrd);

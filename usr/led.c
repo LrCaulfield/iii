@@ -2,20 +2,24 @@
 #include <stdlib.h>
 #include <string.h>
 #include "knl/stm32f1xx.h"
+#include "knl/syshdlr.h"
 #include "syscall.h"
 #include "led.h"
 #include "delay.h"
 
-void shutdown(void)
+void shutdown()
 {
     GPIOC->BSRR = GPIO_BSRR_BS13;
-    iiiExit(0);
 }
 
-void shutdownEx(void)
+void sighdlr()
+{
+    GPIOA->BSRR = GPIO_BSRR_BR0;
+}
+
+void shutdownEx()
 {
     GPIOA->BSRR = GPIO_BSRR_BS0;
-    iiiExit(0);
 }
 
 void flash(int argc, char **argv)
@@ -25,7 +29,7 @@ void flash(int argc, char **argv)
         iiiWrite(1, msg, strlen(msg));
         iiiExit(1);
     }
-    iiiDywd(shutdown);
+    iiiDywd(SIG_KILL, shutdown);
     for (;;) {
         GPIOC->BSRR = GPIO_BSRR_BR13;
         delay(atoi(argv[1]));
@@ -41,7 +45,7 @@ void flashEx(int argc, char **argv)
         iiiWrite(1, msg, strlen(msg));
         iiiExit(1);
     }
-    iiiDywd(shutdownEx);
+    iiiDywd(SIG_KILL, shutdownEx);
     for (;;) {
         GPIOA->BSRR = GPIO_BSRR_BR0;
         delay(atoi(argv[1]));
