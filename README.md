@@ -193,12 +193,6 @@ The steps of `sysKill` (more precisely `sigSend`):
 2. Set the new frame's `pc` to `executor`, and write the original `pc | 1` to the slot **right after the frame**
 3. On exception return `pc = executor`, so it runs:
 
-Low address                              High address
-+---------+---------+---------+---------+
-| r4..r11 | r0..r3  | r12,lr  | pc,psr  |  <- user stack
-+---------+---------+---------+---------+
-^
-thrd->psp
 ```
 Low address                                                           High address
 +---------+---------+---------+---------+---------+---------+---------+
