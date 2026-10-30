@@ -1,31 +1,33 @@
 #include <stdio.h>
+#include "knl/stm32f1xx.h"
 #include "knl/syshdlr.h"
+#include "knl/thrd.h"
 #include "syscall.h"
 #include "delay.h"
 
-static void dywd()
+static char msg[2] = "A";
+
+static void msgChg()
 {
-    printf("AAA! I'm homicided!\n");
+    if (msg[0] == 'A') msg[0] = 'B';
+    else msg[0] = 'A';
 }
 
 static void func()
 {
-    iiiDywd(2, dywd);
-    char *msg[3] = { "Hello ", "meine ", "Fraunde!\n" };
-    for (int i = 0; i < 3; i++) {
-        printf(msg[i]);
-        delay(250);
+    iiiDywd(3, msgChg);
+    for (;;) {
+        printf(msg);
+        delay(150);
     }
-    printf("I'm still alive...\n");
-    for (;;);
 }
 
 void test()
 {
     setvbuf(stdout, NULL, _IONBF, 0);
-    printf("Hello, iii\n");
-    pid_t pid = iiiNew(func, (char *[]){ "func", NULL }, 0);
-    delay(600);
-    iiiKill(pid, 2);
-    for (;;);
+    pid_t pid = iiiNew(func, (char *[]){ "func", NULL }, 0, 0x400);
+    for (;;) {
+        delay(600);
+        iiiKill(pid, 3);
+    }
 }

@@ -6,7 +6,7 @@
 #include "system_stm32f1xx.h"
 #include "list.h"
 #include "thrd.h"
-#include "schel.h"
+#include "sched.h"
 #include "syshdlr.h"
 #include "usr/shell.h"
 #include "usr/test.h"
@@ -16,7 +16,7 @@ extern char _estack;
 void executor(void);
 
 
-void *schel(void *psp)
+void *sched(void *psp)
 {
     static bool booted;
     if (!booted) {
@@ -26,18 +26,23 @@ void *schel(void *psp)
     }
 
     thrd_run->psp = psp;
-    listExch((struct Node *)thrd_run->prev);
+    while (thrd_run->stat == DIE) {
+        struct Thrd *thrd_die = thrd_run;
+        thrd_run = thrdSwt(thrd_run);
+        thrdDel(thrd_die);
+    }
+    struct Thrd *thrd = thrdSwt(thrd_run);
 
     for (uint8_t pri = 0; pri < PRI_N; pri++) {
         if (thrd_heads[pri].next == &thrd_heads[pri]) continue;
 
-        struct Thrd *thrd = (struct Thrd *)&thrd_heads[pri];
         do {
-            thrd = thrd->next;
             if (thrd->sig) goto run;
             switch (thrd->stat) {
             case (DIE):
-                thrdDel(thrd);
+                struct Thrd *thrd_die = thrd;
+                thrd = thrdSwt(thrd);
+                thrdDel(thrd_die);
                 continue;
             case (RUN):
 run:
@@ -46,7 +51,8 @@ run:
                 break;
             default:
             }
-        } while (thrd != (struct Thrd *)&thrd_heads[pri]);
+            thrd = thrdSwt(thrd);
+        } while (thrd != thrd_run->next);
     }
     for (;;);
 }
@@ -58,7 +64,8 @@ void *iiiInit()
         thrd_heads[pri].next = &thrd_heads[pri];
     }
     char *argv[2] = { "shell", NULL, };
-    thrd_run = thrdCreat(shell, argv, 0);
+    thrd_run = thrdCreat(shell, argv, 0, 0x400);
+    while (!thrd_run);
     thrd_run->pare = NULL;
     thrd_run->chil = NULL;
     thrd_run->sibl = NULL;

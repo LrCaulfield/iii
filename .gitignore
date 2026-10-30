@@ -11,11 +11,9 @@
 *~
 .DS_Store
 
-knl/
-*.o
+knl/*.o
 
-usr/
-*.o
+usr/*.o
 
 log/
 *.log

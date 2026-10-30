@@ -1,82 +1,290 @@
-如你所见，这篇README和它所描述的程序一样烂
+# iii (Iii Is Iii) — A Toy Scheduler on STM32F103C6T6
 
-通过SysTick_Handler定期挂起PendSV中断，从而切换线程此时传入的yeild为0，不进入系统调用处理；
+> just write for self-playing:)
 
+## Introduction
 
-##异常调用和异常返回
-STM32F103C6T6进入中断函数前会自动压入寄存器r0-r3,r12,pc,psr,lr，我们只需在中断函数中再压入r4-r11就可以了；
-+-----------------+      +-----------------+      +-------+
-|      stack      |      |      stack      |      | stack |
-|regs|                   |regs|                   |regs|                
-^                        ^                        ^
-thrd1->psp             thrd2->psp             thrd3->psp
-然后把psp传给调度器就能访问对应线程的寄存器组，从而读取参数、传返回值、恢复线程；
+`iii` is a minimal toy scheduler running on **STM32F103C6T6** (Cortex-M3, 32 KB Flash / 10 KB SRAM). It implements:
 
+- Context switching based on **PendSV** (SysTick pends PendSV every 10 ms)
+- System call dispatch based on **SVC**
+- Preemptive scheduling with 2 priority levels and up to 9 threads
+- Process-like thread operations: `iiiNew / iiiExit / iiiWait / iiiKill`
+- Signal handling: `iiiDywd` lets you write your own "last words" (register a signal handler); `iiiKill` kills (sends a signal to) the specified thread
+- User-space libc (`printf` / `malloc` / `strlen` / `strcmp` / `atoi` …) + serial shell
+- GDB Python script `ps.py` to inspect all threads during debugging
 
-##线程对象
-+---------------------------------------+
-| argv | strings |        stack         |
-^                             ^
-thrd->ptr                     frame
-thrd.c中的函数create会malloc一片空间，thrd->psp会从这片空间末尾-(18*32)开始，
-因为第1次运行线程的操作和恢复线程其实一模一样，即需要弹出18word然后运行用户程序，
-所以要预留18word假栈，而这上面的数值是会弹进寄存器的，所以可以用这个假栈传参数给新线程，
-如：
-uint32_t *frame = thrd->psp;
-frame[8] = 114514; // 这1word到时会弹进r0，从而使新线程的第1个参数是114514（EABI）
+## Directory Structure
 
-    <<----------- 8 byte
-+---------------------------------------+
-|          regs           | res  |  pc  |
-|executor|
+```
+.
+├── knl/                    Kernel
+│   ├── executor.S          Signal-handling trampoline
+│   ├── list.c / list.h     Doubly linked list operations
+│   ├── sched.c / sched.h   Scheduler + system initialization
+│   ├── syshdlr.c / .h      SVC dispatch and system call handlers
+│   ├── thrd.c / thrd.h     Thread control block
+│   ├── stm32f1xx_it.c      Exception handlers (SysTick pends PendSV)
+│   └── system_stm32f1xx.c  Chip initialization
+├── usr/                    User space & drivers
+│   ├── clk.c   systick.c   Clock and time slice
+│   ├── io.c    usart.c     GPIO / USART1
+│   ├── nvic.c  exti.c      Interrupt configuration
+│   ├── syscall.c           SVC wrapper / system call stubs
+│   ├── shell.c led.c test.c
+│   └── delay.c
+├── startup.s               Reset vector, exception entries, vector table
+├── STM32F103X6_FLASH.ld    Linker script
+├── debug.c                 openocd + gdb launcher
+├── telnet.c                openocd + telnet (OpenOCD console)
+├── tty.c                   Serial terminal
+├── ps.py                   GDB command: print thread list
+└── compile_commands.json
+```
+
+## Build & Flash & Debug
+
+```bash
+# Build
+make
+
+# Build and flash (OpenOCD + ST-Link)
+make flash
+```
+
+Dependencies: `arm-none-eabi-gcc (Fedora 15.2.0-4.fc44) 15.2.0`, `Open On-Chip Debugger 0.12.0+dev-snapshot (2026-07-11-00:00)`, `GNU Make 4.4.1`.
+
+### Debugging & Serial
+
+| Tool | Purpose | Usage |
+|---|---|---|
+| `debug.c` | Start openocd and enter gdb | Compile to an executable and run |
+| `telnet.c` | Start openocd + telnet (port 4444) | Same as above |
+| `tty.c` | Serial terminal (`/dev/ttyUSB0 @ 9600`) | Same as above |
+| `ps.py` | GDB command `ps`, list all threads | Inside gdb: `source ps.py`, then `ps` or `ps -v` |
+
+`debug` and `telnet` write openocd logs to `./log/openocd.log` (create the directory first). `tty` can be exited with `Ctrl-C`.
+
+## Boot Flow
+
+```
+Reset_Handler
+  ├─ copy .data, clear .bss
+  ├─ SystemInit   (clk, systick, gpio, usart, nvic...)
+  ├─ iiiInit      (initialize list heads, create root thread)
+  ├─ PSP := MSP
+  ├─ CONTROL := 0b10   (switch to PSP mode)
+  ├─ SysTick CTRL |= TICKINT
+  └─ b .              (wait for the first PendSV)
+```
+
+First SysTick → pend PendSV → `PendSV_Handler` branches to `trapper` → `sched(psp)`.
+
+The first time `sched()` is called, it takes the `booted == false` branch: sets `CONTROL = 0b11` and returns `thrd_run->psp`. `trapper` pops `r4-r11` and the hardware frame from `psp`, entering the first thread directly.
+
+Every subsequent PendSV/SVC goes through the same entry, only with a different `psp`.
+
+## Context Switching
+
+On exception entry, STM32 automatically pushes `r0-r3, r12, lr, pc, psr` (8 words = 32 B). `trapper` manually pushes `r4-r11` (8 words), totaling 16 words:
+
+```
+Low address                             High address
++---------+---------+---------+---------+
+| r4..r11 | r0..r3  | r12,lr  | pc,psr  |  <- user stack
++---------+---------+---------+---------+
 ^
 thrd->psp
-kill的实现很有意思，它用knl/executor.S中的函数executor包装dywd，
-sysKill会把线程的寄存器栈下移8字节，在后面填上原线程被打断处，即原thrd_kill->pc，
-然后把thrd_kill->pc改成executor以执行dywd，
-executor最后的add sp, #4; pop {pc}会跳回原线程，以后kill就可以改成发送信号；
-这样sysKill只管使线程返回executor，schel完全不管当前线程是在正常运行还是处理信号
+```
 
+Handing this `psp` to the scheduler is equivalent to handing over all registers of the thread. The C-side counterpart is `struct Frm` (`knl/thrd.h`).
 
-##系统调用
-svc指令会触发SVCcall中断，这个中断处理函数会调用schel并传入yeild = 1，
-从而进入distr（系统处理分发函数）； syshdlr.c
-这个指令集的系统调用号是立即数，如：svc #1，系统处理函数可通过pc找到这个立即数；
-传参类似函数；
+## Thread Object
 
-usr/syscall.c封装了svc指令及系统调用号，
-在调用这些函数时，编译器会按ABI填寄存器并svc，从而将参数保留在用户栈中，
-系统处理函数会用psp从栈中访问参数；
+```c
+struct Thrd {
+    struct Thrd *prev, *next;     // intrusive linked list
+    pid_t pid;                    // 1..MAX_THRD_N-1
+    void *psp;                    // points to start of Frm
+    void *ptr;                    // stack base from malloc
+    int argc; char **argv;        // startup args (copied at top of stack)
+    int *wstat;                   // wait receives exit status here
+    void (*dywd[10])(void);       // "last words" for each signal
+    struct Thrd *pare, *chil, *sibl;  // process tree
+    pid_t wpid;                   // who we are waiting for
+    enum Stat stat;               // RUN/BLK/ZMB/DIE
+    enum Sig sig;                 // pending signal
+};
+```
 
-iiiYield   挂起PendSV中断以切出当前线程
-iiiNew     创建新线程
-iiiWaitpid 等指定pid的线程退出
-iiiExit    退出
-iiiKill    杀死指定pid的线程并执行遗言函数
-iiiDywd    立遗嘱
+`thrdCreat()` allocates the thread stack with `malloc(stk_sz)`, sets `psp` to `stack_top - 16*4`, and builds a fake frame:
 
+```
+frm->r0  = argc
+frm->r1  = argv
+frm->lr  = NULL
+frm->pc  = func
+frm->psr = 0x01000000
+```
 
-##使用
-编译用arm-none-eabi-gcc，下载、调试用openocd；
-启动完成后，schel会创建第1个线程shell， 你当然也可以改成自己的程序，
-cmd用USART1（PA9，PA10）输入输出，这是_read、_write决定的，
-有5个命令可用：
-    kill    杀死指定pid的线程
-    ps      显示当前所有线程
-    flash   闪板载LED（命令后一定要加“&”，
-        因为这个内置程序会无限循环）
-    flashEx 闪PA0接的LED（同样要加“&”）
-    led     控制板载LED亮灭
-命令本身其实就是创建一个线程；
-修改程序后在项目根目录用make编译，make flash编译并下载；
-tool/debug启动GDB调试；
-tool/tty是一个小串口工具，会一直读/dev/ttyUSB0并将内容写到标准输出，同时读取标准输入并将内容写到/dev/ttyUSB0
+The first time this thread is scheduled, popping `r4-r11` + the hardware frame is equivalent to entering `func(argc, argv)` directly, exactly the same operation as restoring a preempted thread. **Passing arguments through the fake frame** is the key trick of this design.
 
-##闲聊
-主要的就是knl/schel.c knl/syshdlr.c knl/thrd.c，复位后会从Reset_Handler开始，做一些初始化后就会开PendSV中断，进schel，
-第1次进schel会创建shell并运行。系统调用用svc指令触发SVC中断，SVC_Handler会调用distr调用对应处理函数，如需要处理完后切换线程的调用会挂PendSV中断，出来后立即进schel调度。
-这里的系统调用只能做线程操作，根本没必要进中断，这样做只是假把意思玩1下传参
-我觉得最好玩的就是上下文切换和通过用户栈传参，还有就是executor执行dywd这个馊主意:)，内存映射应该也好玩，这个机器没有内存保护，没玩成
-executor这个方法基本上就是：sysKill把原寄存器栈下移了8字节，并在后面添上原来的pc，
-把现在的pc改成executor，这样异常返回就会回到executor，最后的add ps, #4; pop {pc}就会返回原线程，并保证了上下文；mov r7, #0; svc #0是做yield，
-因为对于真正被杀死的线程，在进executor之前就被sysKill置DIE了，只是因为有is_homicide才能最后1舞，再进schel就会彻底delThrd，对于后面要加的信号功能，不真正死掉的线程自然能从psp {pc}返回原线程
+The thread stack size is decided by the caller, e.g. `shell` has a `0x400`-byte stack.
+
+## Scheduler (`knl/sched.c`)
+
+```c
+void *sched(void *psp);
+```
+
+- First call: `booted = true; __set_CONTROL(0b11); return thrd_run->psp;`
+- Afterwards:
+  1. Save the current thread's `psp`
+  2. `listExch(thrd_run->prev)` moves the current thread back one slot in the list, avoiding immediate reselection
+  3. Walk the list from priority `0 .. PRI_N-1`, pick the first thread with `sig != 0` or `stat == RUN`
+  4. `DIE` threads are immediately `thrdDel`'d
+  5. If none found, spin forever
+
+Thread state transitions:
+
+```
+RUN  →(wait)  → BLK
+BLK  →(child exit / kill wakes up) → RUN
+RUN  →(exit but parent hasn't waited yet)  → ZMB
+ZMB  →(parent wait)            → DIE
+RUN  →(kill)                   → DIE (but sig != 0, so last words run first)
+```
+
+## System Calls (`knl/syshdlr.c` + `usr/syscall.c`)
+
+User-space `syscall()` puts the **system call number in `r7`** and **arguments in `r0-r3`**, then executes `svc #0`:
+
+```c
+static uint32_t
+syscall(uint32_t sys_num,
+        uint32_t arg0, uint32_t arg1,
+        uint32_t arg2, uint32_t arg3);
+```
+
+`SVC_Handler` branches to `trapper` → `distr(psp)`, and `distr` dispatches on `frm->r7`:
+
+| # | Name | Prototype |
+|---|---|---|
+| 0 | `SYS_YIELD` | `void iiiYield(void)` |
+| 1 | `SYS_NEW` | `pid_t iiiNew(void *func, char **argv, uint8_t pri, size_t stk_sz)` |
+| 2 | `SYS_EXIT` | `void iiiExit(int stat)` |
+| 3 | `SYS_WAIT` | `pid_t iiiWait(pid_t pid, int *wstat)` |
+| 4 | `SYS_KILL` | `int iiiKill(pid_t pid, enum Sig sig)` |
+| 5 | `SYS_DYWD` | `void iiiDywd(enum Sig sig, void (*func)(void))` |
+
+The only built-in signal is `SIG_KILL = 1`. You can of course use any number ≤ `9` as a signal number.
+
+### About `svc`
+
+Strictly speaking, these system calls **do not need** to enter an exception at all — they are all user-space thread operations; you could just call C functions directly. Using `svc` is purely for the fun of passing arguments through the exception mechanism.
+
+## `executor`: A Dirty Trick
+
+`knl/executor.S` contains a piece of assembly whose job is to **temporarily jump out to run a signal handler without destroying the context**.
+
+The steps of `sysKill` (more precisely `sigSend`):
+
+1. Move the thread's `psp` down by 8 bytes and `memcpy` the whole frame down (i.e. "make room")
+2. Set the new frame's `pc` to `executor`, and write the original `pc | 1` to the slot **right after the frame**
+3. On exception return `pc = executor`, so it runs:
+
+Low address                              High address
++---------+---------+---------+---------+
+| r4..r11 | r0..r3  | r12,lr  | pc,psr  |  <- user stack
++---------+---------+---------+---------+
+^
+thrd->psp
+```
+Low address                                                           High address
++---------+---------+---------+---------+---------+---------+---------+
+| r4..r11 | r0..r3  | r12,lr  | pc,psr  |   res.  | orig pc |   ...   |   <- user stack
++---------+---------+---------+---------+---------+---------+---------+
+^                                   ^                   ^
+thrd->psp                       psr slot             pop {pc} form here
+(move down 8 bytes)                               (jmp back to orig thrd)
+```
+
+```asm
+executor:
+    push {r0-r5, r7, r12, lr}
+    mrs  r4, apsr                     @ save original context (except pc; pc is stored below the original stack and will be popped later)
+    ldr  r5, =thrd_run
+    ldr  r5, [r5, #0]
+    ldrb r1, [r5, #Thrd_sig]          @ get signal number
+    add  r0, r5, #Thrd_dywd
+    lsl  r1, #2
+    ldr  r0, [r0, r1]
+    orr  r0, #1
+    blx  r0                            @ call the last-words function
+
+    mov  r0, #0
+    strb r0, [r5, #Thrd_sig]           @ clear sig
+
+    mov  r7, #0
+    svc  #0                            @ SYS_YIELD
+
+    msr  apsr, r4
+    pop  {r0-r5, r7, r12, lr}
+    add  sp, #4                        @ restore original context (except pc)
+    pop  {pc}                          @ jump back to original pc
+```
+
+Thus:
+
+- `SIG_KILL`: the thread is marked `DIE` before entering `executor`, but since `sig != 0`, the scheduler still selects it, runs the last words, yields, and then it gets reaped.
+- Other signals: the thread simply returns to where it was via `pop {pc}` and continues running.
+
+This way `sched` only decides whether the current thread should run; it **does not care** whether the thread is running normally or handling a signal.
+
+## Shell Commands
+
+`shell` reads command lines from USART1 (PA9/PA10); `_read` / `_write` are mapped to `iiiRead` / `iiiWrite`.
+
+A command spawns a new thread, and the remaining words are passed to the new thread via `argv`:
+
+| Command | Description |
+|---|---|
+| `ps` | List all threads (pid, state, argv) |
+| `kill <pid>` | Send `SIG_KILL` to pid |
+| `led on` / `led off` | Turn on / off the on-board LED (PC13) |
+| `flash <ms> &` | Blink on-board LED with delay ms ( **`&` is mandatory** ) |
+| `flashEx <ms> &` | Blink external LED on PA0 with delay ms ( **`&` is mandatory** ) |
+
+`flash` / `flashEx` are infinite loops; without `&`, the shell will block forever in `iiiWait`.
+
+## Default Root Thread
+
+In `sched.c`, `iiiInit()` currently starts `shell` by default. You can of course change it to `test` or your own program:
+
+```c
+char *argv[2] = { "shell", NULL, };
+thrd_run = thrdCreat(shell, argv, 0, 0x400);
+```
+
+Changing it is easy:
+
+```c
+char *argv[2] = { "yourProg", NULL, };
+thrd_run = thrdCreat(yourProg, argv, 0, 0x400);
+```
+
+## Constants Cheat Sheet
+
+| Name | Value | Description |
+|---|---|---|
+| `PRI_N` | 2 | Number of priority levels |
+| `MAX_THRD_N` | 10 | pid limit (pid = 1..9) |
+| `SIG_N` | 9 | `dywd` array length (actual signals 0..9) |
+| `USART_BUF_SIZE` | 0x100 | Serial ring buffer |
+| `_Min_Heap_Size` | 0x200 | Heap in linker script |
+| `_Min_Stack_Size` | 0x400 | Main stack in linker script |
+
+## Known Issues / TODO
+
+- **No memory protection**: Cortex-M3 has no MMU; user threads can write any SRAM.
+- Each thread's stack size is decided by the caller, so stack overflow is easy — I've hit it many times during testing. Stack overflow detection and something like `thrdRealloc` would be nice in the future.

@@ -3,5 +3,5 @@
 
 #define MAX_THREAD_N 10
 
-void *schel(void *psp);
+void *sched(void *psp);
 void *iiiInit();

@@ -3,26 +3,10 @@
 #include <sys/stat.h>
 #include "knl/stm32f1xx.h"
 #include "knl/syshdlr.h"
+#include "syscall.h"
 #include "usart.h"
 
 extern char _end;
-
-static uint32_t
-syscall(uint32_t sys_num, uint32_t arg0, uint32_t arg1, uint32_t arg2)
-{
-    register uint32_t sys_numR __asm__("r7") = sys_num;
-    register uint32_t arg0R __asm__("r0") = arg0;
-    register uint32_t arg1R __asm__("r1") = arg1;
-    register uint32_t arg2R __asm__("r2") = arg2;
-    register uint32_t ret __asm__("r0");
-    __asm__ volatile (
-        "svc #0 \n"
-        : "=r"(ret)
-        : "r"(sys_numR), "r"(arg0R), "r"(arg1R), "r"(arg2R)
-        : "memory"
-    );
-    return ret;
-}
 
 ssize_t iiiRead(int fd, char *buf, size_t len)
 {
@@ -51,36 +35,6 @@ ssize_t iiiWrite(int fd, char *ptr, size_t len)
     }
     while (!(USART1->SR & USART_SR_TC));
     return len;
-}
-
-void iiiYield(void)
-{
-    syscall(SYS_YIELD, 0, 0, 0);
-}
-
-pid_t iiiNew(void *func, char **argv, uint8_t pri)
-{
-    return syscall(SYS_NEW, (uint32_t)func, (uint32_t)argv, 0);
-}
-
-pid_t iiiWait(pid_t pid, int *_Nullable wstat)
-{
-    return syscall(SYS_WAIT, pid, (uint32_t)wstat, 0);
-}
-
-void iiiExit(int stat)
-{
-    syscall(SYS_EXIT, stat, 0, 0);
-}
-
-int iiiKill(pid_t pid, enum Sig sig)
-{
-    return syscall(SYS_KILL, pid, sig, 0);
-}
-
-void iiiDywd(enum Sig sig, void (*func)(void))
-{
-    syscall(SYS_DYWD, sig, (uint32_t)func, 0);
 }
 
 /* ! */
@@ -129,14 +83,10 @@ caddr_t _sbrk(int incr)
     return (caddr_t)prev_heap_end;
 }
 
-void _exit(int stat) { iiiExit(stat); }
+void _exit(int stat) __attribute__((alias("iiiExit")));
 
-ssize_t _read(int fd, char *buf, int len)
-{
-    return iiiRead(fd, buf, len);
-}
+ssize_t _read(int fd, char *buf, size_t len)
+    __attribute__((alias("iiiRead")));
 
-ssize_t _write(int fd, char *ptr, int len)
-{
-    return iiiWrite(fd, ptr, len);
-}
+ssize_t _write(int fd, char *ptr, size_t len)
+    __attribute__((alias("iiiWrite")));

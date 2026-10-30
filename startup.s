@@ -56,7 +56,7 @@ infinit_loop:
 
 .type PendSV_Handler, %function
 PendSV_Handler:
-    ldr r1, =schel
+    ldr r1, =sched
     b trapper
 .size PendSV_Handler, . - PendSV_Handler
 

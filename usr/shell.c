@@ -52,7 +52,7 @@ void shell(int argc, char **argv)
 
         for (int i = 0; i < CMD_N; i++) {
             if (!strcmp(tokens[0], cmds[i].cmd)) {
-                pid_t pid = iiiNew(cmds[i].func, tokens, 0);
+                pid_t pid = iiiNew(cmds[i].func, tokens, 0, 0x200);
                 if (w) iiiWait(pid, NULL);
                 goto ctn;
             }
@@ -95,12 +95,13 @@ static bool isEmp(char c)
 
 static void cmdKill(int argc, char **argv)
 {
-    if (argc != 2) {
-        perror("kill: usage: kill {pid}\n");
+    if (argc != 3) {
+        perror("kill: usage: kill {pid} {sig}\n");
         iiiExit(1);
     }
     pid_t pid = atoi(argv[1]);
-    if (iiiKill(pid, SIG_KILL) == -1) {
+    enum Sig sig = atoi(argv[2]);
+    if (iiiKill(pid, sig) == -1) {
         fprintf(stderr, "pid %d not found\n", pid);
         iiiExit(-1);
     }
@@ -117,7 +118,7 @@ void cmdPs(int argc, char **argv)
             thrd != (struct Thrd *)&thrd_heads[i];
             thrd = thrd->next
         ) {
-            printf("%d", thrd->pid);
+            printf("[%d] ", thrd->pid);
             printStat(thrd);
             for (int i = 0; i < thrd->argc; i++) {
                 printf(" %s", thrd->argv[i]);

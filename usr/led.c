@@ -7,17 +7,17 @@
 #include "led.h"
 #include "delay.h"
 
-void shutdown()
+static void shutdown()
 {
     GPIOC->BSRR = GPIO_BSRR_BS13;
 }
 
-void sighdlr()
+static void sigHdlr()
 {
-    GPIOA->BSRR = GPIO_BSRR_BR0;
+    printf("recieve sig 3\n");
 }
 
-void shutdownEx()
+static void shutdownEx()
 {
     GPIOA->BSRR = GPIO_BSRR_BS0;
 }
@@ -30,6 +30,7 @@ void flash(int argc, char **argv)
         iiiExit(1);
     }
     iiiDywd(SIG_KILL, shutdown);
+    iiiDywd(3, sigHdlr);
     for (;;) {
         GPIOC->BSRR = GPIO_BSRR_BR13;
         delay(atoi(argv[1]));

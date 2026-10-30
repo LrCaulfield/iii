@@ -5,7 +5,6 @@
 
 #define MAX_THRD_N 10
 #define PRI_N 2
-#define THRD_STACK_SIZE 0x200
 
 enum Stat { RUN, BLK, ZMB, DIE, };
 
@@ -42,7 +41,8 @@ struct Frm {
 extern struct Thrd *thrd_run;
 extern struct Node thrd_heads[PRI_N];
 
-struct Thrd *thrdCreat(void *func, char **argv, uint8_t pri);
+struct Thrd
+*thrdCreat(void *func, char **argv, uint8_t pri, size_t stk_sz);
 void thrdDel(struct Thrd *thrd);
 struct Thrd *thrdSrch(pid_t pid);
 struct Thrd *thrdSwt(struct Thrd *thrd);

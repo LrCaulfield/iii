@@ -265,12 +265,12 @@
       "-I/home/larry/arm/STM32CubeF1/Drivers/CMSIS/Core/Include",
       "-I/home/larry/arm/STM32CubeF1/Drivers/CMSIS/Device/ST/STM32F1xx/Include",
       "-o",
-      "knl/schel.o",
-      "knl/schel.c"
+      "knl/sched.o",
+      "knl/sched.c"
     ],
     "directory": "/home/larry/arm/iii",
-    "file": "/home/larry/arm/iii/knl/schel.c",
-    "output": "/home/larry/arm/iii/knl/schel.o"
+    "file": "/home/larry/arm/iii/knl/sched.c",
+    "output": "/home/larry/arm/iii/knl/sched.o"
   },
   {
     "arguments": [

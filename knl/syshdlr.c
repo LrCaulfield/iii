@@ -39,13 +39,15 @@ void sysYield(struct Frm *frm)
     SCB->ICSR = SCB_ICSR_PENDSVSET_Msk; // set pend PendSV to swt
 }
 
-// pid_t iiiNew(void *func, char **argv, uint8_t pri);
+// pid_t
+// iiiNew(void *func, char **argv, uint8_t pri size_t stk_sz);
 static void sysNew(struct Frm *frm)
 {
     void *func  = (void *)frm->r0;
     char **argv = (char **)frm->r1;
     uint8_t pri = frm->r2;
-    struct Thrd *thrd = thrdCreat(func, argv, pri);
+    size_t stk_sz = frm->r3;
+    struct Thrd *thrd = thrdCreat(func, argv, pri, stk_sz);
     if (thrd == NULL) { frm->r0 = 0; return; }
 
     thrd->chil = NULL;
@@ -111,26 +113,28 @@ static void checkWait(struct Thrd *thrd_zmb, int wstat)
         thrd_pare->stat = RUN;
         if (wstat) *thrd_pare->wstat = wstat;
         thrd_zmb->stat = DIE;
+    } else {
+        thrd_zmb->stat = ZMB;
     }
 }
 
 static void sigSend(struct Thrd *thrd, enum Sig sig)
 {
     struct Frm *frm = thrd->psp;
-    if (thrd->sig != SIG_NO || thrd == NULL) {
+    if (thrd == NULL || thrd->sig != SIG_NO) {
         frm->r0 = -1; return;
     }
-    thrd->sig = sig;
-    if (thrd->dywd[thrd->sig]) {
+
+    if (thrd->dywd[sig]) {
+        thrd->sig = sig;
         thrd->psp -= 8;
-        memcpy(thrd->psp,
-               thrd->psp + 8,
-               sizeof(struct Frm));
+        memcpy(thrd->psp, thrd->psp + 8, sizeof(struct Frm));
         struct Frm *frm = thrd->psp;
         *(void **)(thrd->psp + sizeof(struct Frm) + 4) =
             (void *)((uint32_t)(frm->pc) | 1);
         frm->pc = executor;
     }
+
     switch (sig) {
     case SIG_KILL:
         custodyTran(thrd);

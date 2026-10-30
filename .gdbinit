@@ -6,13 +6,13 @@ load
 monitor reset halt
 maintenance flush register-cache
 
+source tool/ps.py
+
 b HardFault_Handler
 commands
     printSCB
 end
-b executor.S:28
-
-source tool/ps.py
+b sigSend
 
 define printSCB
     set $SCB_base = 0xe000ed00
@@ -31,5 +31,5 @@ define printSCB
 end
 
 define frmPrint
-    p *(struct Frm *)(findThrdPid($arg0)->psp)
+    p *(struct Frm *)(thrdSrch($arg0)->psp)
 end

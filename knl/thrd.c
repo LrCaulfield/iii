@@ -16,7 +16,8 @@ static pid_t pidalloc(void)
     return 0;
 }
 
-struct Thrd *thrdCreat(void *func, char **argv, uint8_t pri)
+struct Thrd
+*thrdCreat(void *func, char **argv, uint8_t pri, size_t stk_sz)
 {
     pid_t pid = pidalloc();
     if (pid == 0) return NULL;
@@ -24,12 +25,13 @@ struct Thrd *thrdCreat(void *func, char **argv, uint8_t pri)
     struct Thrd *thrd = nodeCreat(sizeof(struct Thrd));
     if (thrd == NULL) { return NULL; }
 
-    if ((thrd->ptr = malloc(THRD_STACK_SIZE)) == NULL) {
+    thrd->ptr = malloc(stk_sz);
+    if (!thrd->ptr) {
         free((void *)thrd);
         return NULL;
     }
 
-    thrd->psp = thrd->ptr + THRD_STACK_SIZE - 16 * 4;
+    thrd->psp = thrd->ptr + stk_sz - 16 * 4;
     
     for (thrd->argc = 0; argv[thrd->argc] != NULL; thrd->argc++);
     thrd->argv = thrd->ptr;
