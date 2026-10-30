@@ -18,21 +18,21 @@ int main(void)
         execl("/usr/bin/openocd", "openocd", \
               "-f", "interface/stlink.cfg", \
               "-f", "target/stm32f1x.cfg", \
-              NULL
+              nullptr
              );
     }
     
     pid[1] = fork();
     if (!pid[1]) {
-        execl("/usr/bin/gdb", "gdb", "-q", NULL);
+        execl("/usr/bin/gdb", "gdb", "-q", nullptr);
         perror("execl gdb failed");
     }
     signal(SIGINT, SIG_IGN);
     
-    while (wait(NULL) != pid[1]);
+    while (wait(nullptr) != pid[1]);
     
     kill(pid[0], SIGTERM);
-    waitpid(pid[0], NULL, 0);
+    waitpid(pid[0], nullptr, 0);
 
     return 0;
 }

@@ -34,7 +34,7 @@ static struct Cmd cmds[CMD_N] = {
 
 void shell(int argc, char **argv)
 {
-    setvbuf(stdout, NULL, _IONBF, 0);
+    setvbuf(stdout, nullptr, _IONBF, 0);
     char *prompt = "$ ";
     for (;;) {
         printf(prompt);
@@ -48,12 +48,12 @@ void shell(int argc, char **argv)
             argc--;
             w = 0;
         }
-        tokens[argc] = NULL;
+        tokens[argc] = nullptr;
 
         for (int i = 0; i < CMD_N; i++) {
             if (!strcmp(tokens[0], cmds[i].cmd)) {
                 pid_t pid = iiiNew(cmds[i].func, tokens, 0, 0x200);
-                if (w) iiiWait(pid, NULL);
+                if (w) iiiWait(pid, nullptr);
                 goto ctn;
             }
         }
@@ -96,7 +96,7 @@ static bool isEmp(char c)
 static void cmdKill(int argc, char **argv)
 {
     if (argc != 3) {
-        perror("kill: usage: kill {pid} {sig}\n");
+        fprintf(stderr, "kill: usage: kill {pid} {sig}\n");
         iiiExit(1);
     }
     pid_t pid = atoi(argv[1]);

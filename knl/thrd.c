@@ -20,20 +20,20 @@ struct Thrd
 *thrdCreat(void *func, char **argv, uint8_t pri, size_t stk_sz)
 {
     pid_t pid = pidalloc();
-    if (pid == 0) return NULL;
+    if (pid == 0) return nullptr;
 
     struct Thrd *thrd = nodeCreat(sizeof(struct Thrd));
-    if (thrd == NULL) { return NULL; }
+    if (thrd == nullptr) { return nullptr; }
 
     thrd->ptr = malloc(stk_sz);
     if (!thrd->ptr) {
         free((void *)thrd);
-        return NULL;
+        return nullptr;
     }
 
     thrd->psp = thrd->ptr + stk_sz - 16 * 4;
     
-    for (thrd->argc = 0; argv[thrd->argc] != NULL; thrd->argc++);
+    for (thrd->argc = 0; argv[thrd->argc] != nullptr; thrd->argc++);
     thrd->argv = thrd->ptr;
     char *ptr = (char *)(thrd->argv + thrd->argc);
     for (int i = 0; i < thrd->argc; i++) {
@@ -45,7 +45,7 @@ struct Thrd
     struct Frm *frm = thrd->psp;
     frm->r0 = thrd->argc;
     frm->r1 = (uint32_t)thrd->argv;
-    frm->lr = NULL;
+    frm->lr = nullptr;
     frm->pc = func;
     frm->psr = 0x01000000;
 
@@ -74,7 +74,7 @@ struct Thrd *thrdSrch(pid_t pid)
              thrd = thrd->next)
             if (thrd->pid == pid) return thrd;
     }
-    return NULL;
+    return nullptr;
 }
 
 struct Thrd *thrdSwt(struct Thrd *thrd)

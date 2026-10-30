@@ -5,7 +5,7 @@
 void *nodeCreat(size_t size)
 {
     struct Node *node = malloc(size);
-    if (!node) return NULL;
+    if (!node) return nullptr;
     node->next = node->prev = node;
     return node;
 }

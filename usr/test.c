@@ -24,8 +24,8 @@ static void func()
 
 void test()
 {
-    setvbuf(stdout, NULL, _IONBF, 0);
-    pid_t pid = iiiNew(func, (char *[]){ "func", NULL }, 0, 0x400);
+    setvbuf(stdout, nullptr, _IONBF, 0);
+    pid_t pid = iiiNew(func, (char *[]){ "func", nullptr }, 0, 0x400);
     for (;;) {
         delay(600);
         iiiKill(pid, 3);

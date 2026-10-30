@@ -63,12 +63,12 @@ void *iiiInit()
         thrd_heads[pri].prev = &thrd_heads[pri];
         thrd_heads[pri].next = &thrd_heads[pri];
     }
-    char *argv[2] = { "shell", NULL, };
+    char *argv[2] = { "shell", nullptr, };
     thrd_run = thrdCreat(shell, argv, 0, 0x400);
     while (!thrd_run);
-    thrd_run->pare = NULL;
-    thrd_run->chil = NULL;
-    thrd_run->sibl = NULL;
+    thrd_run->pare = nullptr;
+    thrd_run->chil = nullptr;
+    thrd_run->sibl = nullptr;
 
     thrd_run->stat = RUN;
     return thrd_run->psp;

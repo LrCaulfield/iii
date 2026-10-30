@@ -48,9 +48,9 @@ static void sysNew(struct Frm *frm)
     uint8_t pri = frm->r2;
     size_t stk_sz = frm->r3;
     struct Thrd *thrd = thrdCreat(func, argv, pri, stk_sz);
-    if (thrd == NULL) { frm->r0 = 0; return; }
+    if (thrd == nullptr) { frm->r0 = 0; return; }
 
-    thrd->chil = NULL;
+    thrd->chil = nullptr;
     thrd->pare = thrd_run;
     thrd->sibl = thrd_run->chil;
     thrd_run->chil = thrd;
@@ -64,7 +64,7 @@ static void sysWait(struct Frm *frm)
     pid_t pid = frm->r0;
     int *wstat = (int *)frm->r1;
     struct Thrd *thrd_zmb = thrdSrch(pid);
-    if (thrd_zmb == NULL) {
+    if (thrd_zmb == nullptr) {
         frm->r0 = -1;
         SCB->ICSR = SCB_ICSR_PENDSVSET_Msk;
         return;
@@ -111,7 +111,7 @@ static void checkWait(struct Thrd *thrd_zmb, int wstat)
     struct Thrd *thrd_pare = thrd_zmb->pare;
     if (thrd_pare->stat == BLK && thrd_pare->wpid == thrd_zmb->pid) {
         thrd_pare->stat = RUN;
-        if (wstat) *thrd_pare->wstat = wstat;
+        if (thrd_pare->wstat) *thrd_pare->wstat = wstat;
         thrd_zmb->stat = DIE;
     } else {
         thrd_zmb->stat = ZMB;
@@ -121,7 +121,7 @@ static void checkWait(struct Thrd *thrd_zmb, int wstat)
 static void sigSend(struct Thrd *thrd, enum Sig sig)
 {
     struct Frm *frm = thrd->psp;
-    if (thrd == NULL || thrd->sig != SIG_NO) {
+    if (thrd == nullptr || thrd->sig != SIG_NO) {
         frm->r0 = -1; return;
     }
 

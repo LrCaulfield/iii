@@ -59,7 +59,7 @@ void led(int argc, char **argv)
 {
     char msg[] = "led: usage: led {on | off}\n";
     if (argc != 2) {
-        perror(msg);
+        fprintf(stderr, msg);
         iiiExit(1);
     }
     if (!strcmp(argv[1], "on")) {
@@ -70,7 +70,7 @@ void led(int argc, char **argv)
         GPIOC->BSRR = GPIO_BSRR_BS13;
         iiiExit(0);
     }
-    perror(msg);
+    fprintf(stderr, msg);
     delay(200);
     iiiExit(1);
 }
