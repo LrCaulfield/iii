@@ -9,7 +9,7 @@
 - 基于 **PendSV** 的上下文切换（SysTick 每 10 ms 挂起一次 PendSV）
 - 基于 **SVC** 的系统调用分发
 - 2 级优先级、最多 9 个线程的抢占式调度
-- 类进程风格的线程操作：`iiiNew / iiiExit / iiiWait / iiiKill`
+- 线程操作：`iiiNew / iiiExit / iiiWait / iiiKill`
 - 信号处理：`iiiDywd` 为自己立遗嘱（注册信号处理函数），`iiiKill` 杀死（发送信号）给指定线程
 - 用户态 libc（`printf` / `malloc` / `strlen` / `strcmp` / `atoi` …）+ 串口 shell
 - GDB Python 脚本 `ps.py`，调试时查看所有线程
@@ -244,7 +244,7 @@ executor:
 | 命令 | 说明 |
 |---|---|
 | `ps` | 列出所有线程（pid、状态、argv） |
-| `kill <pid>` | 向 pid 发送 `SIG_KILL` |
+| `kill <pid> <sig>` | 向 `pid` 发送 `sig` |
 | `led on` / `led off` | 点亮 / 熄灭板载 LED（PC13） |
 | `flash <ms> &` | 板载 LED 闪烁，延时 ms 毫秒（**必须加 `&`**） |
 | `flashEx <ms> &` | PA0 外部 LED 闪烁，延时 ms 毫秒（**必须加 `&`**） |

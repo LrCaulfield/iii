@@ -12,7 +12,6 @@ b HardFault_Handler
 commands
     printSCB
 end
-b sigSend
 
 define printSCB
     set $SCB_base = 0xe000ed00

@@ -9,7 +9,7 @@
 - Context switching based on **PendSV** (SysTick pends PendSV every 10 ms)
 - System call dispatch based on **SVC**
 - Preemptive scheduling with 2 priority levels and up to 9 threads
-- Process-like thread operations: `iiiNew / iiiExit / iiiWait / iiiKill`
+- thread operations: `iiiNew / iiiExit / iiiWait / iiiKill`
 - Signal handling: `iiiDywd` lets you write your own "last words" (register a signal handler); `iiiKill` kills (sends a signal to) the specified thread
 - User-space libc (`printf` / `malloc` / `strlen` / `strcmp` / `atoi` …) + serial shell
 - GDB Python script `ps.py` to inspect all threads during debugging
@@ -244,7 +244,7 @@ A command spawns a new thread, and the remaining words are passed to the new thr
 | Command | Description |
 |---|---|
 | `ps` | List all threads (pid, state, argv) |
-| `kill <pid>` | Send `SIG_KILL` to pid |
+| `kill <pid> <sig>` | Send `sig` to `pid` |
 | `led on` / `led off` | Turn on / off the on-board LED (PC13) |
 | `flash <ms> &` | Blink on-board LED with delay ms ( **`&` is mandatory** ) |
 | `flashEx <ms> &` | Blink external LED on PA0 with delay ms ( **`&` is mandatory** ) |
